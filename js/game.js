@@ -1,8 +1,20 @@
-// Create the canvas
+// Create the canvas for info board
+var canvasInfo = document.querySelector("#info");
+var ctxInfo = canvasInfo.getContext("2d");
+
+// Create the canvas for game
 var canvas = document.querySelector("#game-canvas");
 var ctx = canvas.getContext("2d");
 maxwidth = 512;
 maxheight = 480;
+
+// Info background image
+var infoBgReady = false;
+var infoBgImage = new Image();
+infoBgImage.onload = function () {
+	infoBgReady = true;
+};
+infoBgImage.src = "images/grass-background.png";
 
 // Background image
 var bgReady = false;
@@ -49,10 +61,10 @@ const player = new Player({
 
 // Monster object
 class Monster {
+	static width = 32
+	static height = 32
 	constructor({position, velocity, image}) {
 		this.position = position
-		this.width = 32
-		this.height = 32
 		this.velocity = velocity
 		this.image = image
 	}
@@ -61,7 +73,7 @@ class Monster {
 		ctx.drawImage(this.image, this.position.x, this.position.y)
 	}
 
-	update() {
+	move() {
 		this.position.x += this.velocity.x
 		this.position.y += this.velocity.y
 		this.draw()
@@ -101,19 +113,19 @@ function generateMap() {
 	//Map of trees
 	const map = [
 		['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'],
-		['X', '-', '-', 'X', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'X'],
-		['X', '-', 'X', 'X', '-', 'X', 'X', 'X', 'X', '-', '-', 'X', 'X', '-', '-', 'X'],
-		['X', '-', 'X', '-', '-', '-', 'X', '-', '-', '-', '-', 'X', '-', 'X', '-', 'X'],
-		['X', '-', 'X', '-', '-', '-', '-', '-', '-', '-', '-', 'X', '-', '-', '-', 'X'],
-		['X', '-', 'X', '-', 'X', 'X', 'X', '-', '-', '-', 'X', 'X', '-', 'X', '-', 'X'],
-		['X', '-', '-', '-', '-', 'X', '-', '-', '-', '-', 'X', 'X', '-', 'X', 'X', 'X'],
-		['X', 'X', '-', 'X', '-', 'X', '-', 'X', '-', '-', '-', '-', '-', 'X', '-', 'X'],
-		['X', '-', '-', 'X', '-', '-', '-', '-', '-', '-', '-', 'X', 'X', 'X', '-', 'X'],
+		['X', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'X'],
+		['X', '-', 'X', '-', 'X', 'X', '-', 'X', 'X', '-', '-', 'X', '-', 'X', '-', 'X'],
+		['X', '-', 'X', '-', '-', '-', '-', 'X', '-', '-', '-', 'X', '-', 'X', '-', 'X'],
+		['X', '-', 'X', '-', 'X', '-', '-', 'X', 'X', 'X', '-', 'X', '-', '-', '-', 'X'],
+		['X', '-', 'X', '-', 'X', '-', 'X', 'X', '-', '-', '-', 'X', '-', 'X', '-', 'X'],
+		['X', '-', '-', '-', 'X', '-', '-', 'X', '-', '-', 'X', 'X', '-', 'X', 'X', 'X'],
+		['X', 'X', 'X', 'X', 'X', '-', '-', 'X', '-', '-', '-', '-', '-', '-', '-', 'X'],
+		['X', '-', '-', '-', '-', '-', 'X', 'X', '-', '-', '-', 'X', 'X', 'X', '-', 'X'],
 		['X', '-', 'X', 'X', '-', '-', '-', '-', 'X', '-', '-', '-', '-', '-', '-', 'X'],
-		['X', '-', '-', 'X', 'X', '-', '-', 'X', 'X', 'X', '-', 'X', 'X', 'X', '-', 'X'],
-		['X', '-', '-', 'X', '-', 'X', '-', '-', '-', '-', '-', 'X', '-', '-', '-', 'X'],
-		['X', '-', '-', '-', '-', '-', '-', 'X', '-', '-', 'X', 'X', '-', 'X', '-', 'X'],
-		['X', 'X', '-', '-', '-', 'X', '-', 'X', '-', '-', '-', '-', '-', '-', '-', 'X'],
+		['X', '-', '-', 'X', 'X', 'X', '-', '-', '-', '-', '-', 'X', 'X', 'X', '-', 'X'],
+		['X', '-', '-', 'X', '-', 'X', '-', '-', '-', '-', '-', '-', '-', '-', '-', 'X'],
+		['X', '-', '-', '-', '-', '-', '-', 'X', 'X', '-', 'X', 'X', '-', 'X', '-', 'X'],
+		['X', 'X', '-', 'X', '-', 'X', '-', 'X', 'X', '-', '-', '-', '-', '-', '-', 'X'],
 		['X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X']
 	]
 
@@ -183,19 +195,15 @@ const keys = {
 addEventListener("keydown", function (e) {
 	switch (e.keyCode) {
 		case 38:
-			player.velocity.y = -playerSpeed
 			keys.up.pressed = true //going up
 			break
 		case 40: 
-			player.velocity.y = playerSpeed
 			keys.down.pressed = true //going down
 			break
 		case 37:
-			player.velocity.x = -playerSpeed
 			keys.left.pressed = true //going left
 			break
 		case 39:
-			player.velocity.x = playerSpeed
 			keys.right.pressed = true //going right
 			break
 	}
@@ -226,6 +234,8 @@ function getRandomInt(max) {
 	return Math.floor(Math.random() * max);
 }
 
+const directions = ['up','down','left','right']
+
 // Reset the monster
 var reset = function () {
 	let randomPos = getRandomInt(respawnSpaces.length)
@@ -251,6 +261,11 @@ var update = function () {
 
 // Draw everything
 var render = function () {
+
+	if (infoBgReady) {
+		ctxInfo.drawImage(infoBgImage, 0, 0);
+	}
+
 	if (bgReady) {
 		ctx.drawImage(bgImage, 0, 0);
 	}
@@ -258,7 +273,7 @@ var render = function () {
 	trees.forEach((tree) => {
 		tree.draw()
 
-		//COLLISION DETECTION
+		//COLLISION DETECTION for player
 		if (
 			player.position.x + player.velocity.x < (tree.position.x + 24)
 			&& tree.position.x < (player.position.x + player.velocity.x + 24)
@@ -268,9 +283,23 @@ var render = function () {
 			player.velocity.x = 0
 			player.velocity.y = 0
 		}
+
+		//COLLISION DETECTION for monster
+		if (
+			monster.position.x + monster.velocity.x < (tree.position.x + 30)
+			&& tree.position.x < (monster.position.x + monster.velocity.x + 30)
+			&& monster.position.y + monster.velocity.y < (tree.position.y + 30)
+			&& tree.position.y < (monster.position.y + monster.velocity.y + 30)
+		) {
+			monsterCollided = true
+			monster.velocity.x = 0
+			monster.velocity.y = 0
+		}
 	})
 	player.move()
+	monster.move()
 
+	//SET PLAYER VELOCITY
 	if (keys.up.pressed) {
 		player.velocity.y = -playerSpeed
 	}
@@ -283,23 +312,32 @@ var render = function () {
 	if (keys.right.pressed) {
 		player.velocity.x = playerSpeed
 	}
-	monster.draw()
 
-	
+	// ctxInfo.clearRect(0, 0, canvasInfo.width, canvasInfo.height);
 	// Score
-	ctx.fillStyle = "rgb(250, 250, 250)";
-	ctx.font = "24px Helvetica";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.fillText("Goblins caught: " + monstersCaught, 32, 32);
-
-	//Time
+	ctxInfo.fillStyle = "rgb(250, 250, 250)";
+	ctxInfo.font = "20px Helvetica";
+	ctxInfo.textAlign = "left";
+	ctxInfo.textBaseline = "top";
+	ctxInfo.fillText("Goblins caught: " + monstersCaught, 32, 32);
+	// Time
+	ctxInfo.fillStyle = "rgb(250, 250, 250)";
+	ctxInfo.font = "20px Helvetica";
+	ctxInfo.textAlign = "left";
+	ctxInfo.textBaseline = "top";
 	currentResult = (Date.now() - timeStarted)/1000;
-	document.querySelector('#time-played').innerText = currentResult;
+	ctxInfo.fillText("Time played: " + currentResult + " seconds", 232, 32);
+	//Best record
+
+	if (bestResult !== 'TBD') {
+		ctxInfo.fillText("Best result: " + bestResult + " seconds", 232, 64);
+	} else {
+		ctxInfo.fillText("Best result: " + bestResult, 156, 64);
+	}
 };
 
 //Other constants and modifiers
-const playerSpeed = 1.2;
+const playerSpeed = 1;
 
 //The main game loop
 var main = function () {
@@ -309,7 +347,7 @@ var main = function () {
 	window.animateId = requestAnimationFrame(main);
 
 	//Winning conditions
-	if (monstersCaught == 20) {
+	if (monstersCaught == 10) {
 		gameIsWon()
 	}
 };
@@ -328,10 +366,12 @@ const monsterCaughtSound = new sound("sounds/monster-caught.wav")
 var gameStarted = false
 var timeStarted
 var currentResult 
-var previousResults = []
-var maximumResult = 10;
+var bestResult = 'TBD'
 var trees = []
 var respawnSpaces = []
+var possibleWays = []
+var oldDirection
+var monsterCollided = false
 
 // Let's play this game!
 function startGame() {
@@ -339,12 +379,46 @@ function startGame() {
 		gameStarted = true;
 		timeStarted = Date.now()
 		//play and auto loop the background music
-		backgroundMusic.play()
+		// backgroundMusic.play()
 		document.querySelector('audio[src="sounds/background-music.wav"]').addEventListener('ended', function() {
 			this.currentTime = 0;
 			this.play();
 		})
 
+		setInterval(function() {
+			if (!monsterCollided) {
+				possibleWays = directions
+			} else {
+				possibleWays = directions.filter((direction) => {
+					return direction !== oldDirection
+				})
+				monsterCollided = false
+			}
+			let random = getRandomInt(possibleWays.length)
+			let direction = possibleWays[random]
+			switch (direction) {
+				case 'up':
+					monster.velocity.x = 0
+					monster.velocity.y = -0.5
+					oldDirection = 'up'
+					break
+				case 'down':
+					monster.velocity.x = 0
+					monster.velocity.y = 0.5
+					oldDirection = 'down'
+					break
+				case 'left':
+					monster.velocity.x = -0.5
+					monster.velocity.y = 0
+					oldDirection = 'left'
+					break
+				case 'right':
+					monster.velocity.x = 0.5
+					monster.velocity.y = 0	
+					oldDirection = 'right'
+					break	
+			}
+		},1200)
 		monstersCaught = 0;
 		player.position.x = canvas.width / 2;
 		player.position.y = canvas.height / 2;
@@ -375,7 +449,12 @@ function stopGame() {
 }
 
 function gameIsWon() {
-	previousResults.push(currentResult)
+	if (bestResult == 'TBD') {
+		console.log('wtf')
+		bestResult = currentResult
+	} else if (currentResult < bestResult) {
+		bestResult = currentResult
+	}
 	backgroundMusic.stop()
 	winGameMusic.play()
 	ctx.fillStyle = "rgb(250, 0, 0)";
@@ -384,19 +463,29 @@ function gameIsWon() {
 	ctx.textBaseline = "middle";
 	ctx.fillText("You won!!!", canvas.width/2, canvas.height/2);
 	ctx.fillText("Your result: " + currentResult + " seconds", canvas.width/2, canvas.height/2 + 64);
+	
+	ctxInfo.clearRect(0, 0, canvasInfo.width, canvasInfo.height);
+	ctxInfo.drawImage(infoBgImage, 0, 0);
+	// Score
+	ctxInfo.fillStyle = "rgb(250, 250, 250)";
+	ctxInfo.font = "20px Helvetica";
+	ctxInfo.textAlign = "left";
+	ctxInfo.textBaseline = "top";
+	ctxInfo.fillText("Goblins caught: " + monstersCaught, 32, 32);
+	// Time
+	ctxInfo.fillStyle = "rgb(250, 250, 250)";
+	ctxInfo.font = "20px Helvetica";
+	ctxInfo.textAlign = "left";
+	ctxInfo.textBaseline = "top";
+	currentResult = (Date.now() - timeStarted)/1000;
+	ctxInfo.fillText("Time played: " + currentResult + " seconds", 232, 32);
+	//Best record
+
+	if (bestResult !== 'TBD') {
+		ctxInfo.fillText("Best result: " + bestResult + " seconds", 232, 64);
+	} else {
+		ctxInfo.fillText("Best result: " + bestResult, 156, 64);
+	}
 	cancelAnimationFrame(window.animateId)
 	gameStarted = false;
-
-	printScoreBoard()
-}
-
-function printScoreBoard() {
-	document.querySelector('#result-list').innerHTML = '';
-	previousResults.sort()
-	previousResults = previousResults.slice(0,10)
-	previousResults.forEach(result => {
-		let el = document.createElement('li')
-		el.innerText = result + ' seconds';
-		document.querySelector('#result-list').appendChild(el); 
-	})
 }

@@ -5,7 +5,15 @@ body {
     margin: 0 auto;
     text-align: center;
 }
-canvas {
+canvas#info {
+    position: absolute;
+    top: 10vw;
+    left: 0;
+    right: 0;
+    padding: 0;
+    margin: auto;
+}
+canvas#game-canvas {
     position: absolute;
     top: 0;
     bottom: 0;

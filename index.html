@@ -9,16 +9,20 @@
 		<div class="container">
 			<button onclick="startGame()">Start game</button>
 			<button onclick="stopGame()">Stop game</button>
-			<p>
-				<span>
-					Time played: <span id="time-played"></span> seconds
-				</span>
-			</p>
+			<div class="instruction-text">
+				<p>
+					<b>Instruction:</b> Try to catch 10 monsters as fast as possible!
+				</p>
+				<p>
+					If you do it under 30 seconds, you are god-like!
+				</p>
+			</div>
 			<div>
 				<ol id="result-list">
 				</ol>
 			</div>
 		</div>
+		<canvas id="info" width="512" height="128"></canvas>
 		<canvas id="game-canvas" width="512" height="480"></canvas>
 		<script src="js/game.js"></script>
 	</body>
